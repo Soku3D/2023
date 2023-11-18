@@ -1,13 +1,13 @@
-SamplerState samplerState : register(s0);
-Texture2D basicTexture : register(t0);
+SamplerState Sampler : register(s0);
+Texture2D canvasTexture : register(t0);
 
-struct psInput
+struct PSInput
 {
-    float4 pos : SV_POSITION;
-    float2 texcoord : TEXCOORD;
+    float4 pos : SV_Position;
+    float2 uv : TEXCOORD;
 };
-float4 main(psInput input) : SV_Target
+
+float4 main(PSInput input) : SV_Target
 {
-    return basicTexture.Sample(samplerState, input.texcoord);
-    //return float4(1.0, 1.0, 0.0, 1.0);
+    return canvasTexture.Sample(Sampler, input.uv);
 }

@@ -105,7 +105,7 @@ namespace soku {
 			device->CreateVertexShader(shader->GetBufferPointer(), shader->GetBufferSize(),
 				NULL, &vertexShader);
 
-			device->CreateInputLayout(elements.data(), elements.size(), shader->GetBufferPointer()
+			device->CreateInputLayout(elements.data(), UINT(elements.size()), shader->GetBufferPointer()
 				, shader->GetBufferSize(), &inputlayout);
 		}
 		static void CreatePixelShader(

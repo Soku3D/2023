@@ -1,5 +1,7 @@
 #include "BaseApp.h"
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 namespace soku
 {
 	BaseApp* appPtr = nullptr;
@@ -12,7 +14,10 @@ namespace soku
 	BaseApp::BaseApp(int width, int height)
 		:m_width(width),
 		m_height(height),
-		m_viewport(D3D11_VIEWPORT())
+		m_viewport(D3D11_VIEWPORT()),
+		m_wnd(nullptr),
+		msQuality(0),
+		swapChainFormat(DXGI_FORMAT_B8G8R8A8_UNORM)
 	{
 		//assert(appPtr == nullptr);
 		appPtr = this;
@@ -32,6 +37,11 @@ namespace soku
 		if (!InitDirectX())
 		{
 			std::cerr << "InitDirectX() Failed";
+			return false;
+		}
+		if (!InitGUI())
+		{
+			std::cerr << "InitGUI() Failed";
 			return false;
 		}
 		return true;
@@ -56,7 +66,7 @@ namespace soku
 		};
 		RegisterClassEx(&wc);
 
-		RECT rect = { 0 ,0, m_width, m_height };
+		RECT rect = { 0 ,0, (LONG)m_width, (LONG)m_height };
 		AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, 0);
 
 		m_wnd = CreateWindow(wc.lpszClassName, L"test",
@@ -106,8 +116,6 @@ namespace soku
 			std::cout << "D3D11CreateDevice Failed";
 			return false;
 		}
-
-		swapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 		device->CheckMultisampleQualityLevels(
 			swapChainFormat, 2, &msQuality);
 
@@ -219,10 +227,22 @@ namespace soku
 	}
 	bool BaseApp::InitGUI()
 	{
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO(); 
+		(void)io;
+		io.DisplaySize = ImVec2((float)m_width, (float)m_height);
+		ImGui::StyleColorsLight();
+		ImGui_ImplDX11_Init(m_device.Get(), m_context.Get());
+		ImGui_ImplWin32_Init(m_wnd);
 		return true;
 	}
 	LRESULT BaseApp::BaseProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
+		if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+		{
+			return true;
+		}
 		switch (msg)
 		{
 		case WM_DESTROY:
@@ -243,11 +263,25 @@ namespace soku
 			}
 			else
 			{
+				ImGui_ImplDX11_NewFrame();
+				ImGui_ImplWin32_NewFrame();
+				ImGui::NewFrame();
+				ImGui::Begin("Gui");
+				UpdateGUI(ImGui::GetIO().DeltaTime);
+				ImGui::End();
+				ImGui::Render();
+
 				Update();
 				Render();
+				ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 				m_swapChain->Present(1, 0);
 			}
 		}
+		ImGui_ImplDX11_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		ImGui::DestroyContext();
+		DestroyWindow(m_wnd);
+
 		return (int)msg.wParam;
 	}
 }

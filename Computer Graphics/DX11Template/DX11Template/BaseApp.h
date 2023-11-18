@@ -5,7 +5,9 @@
 #include <dxgi.h>
 #include <wrl.h>
 #include <iostream>
-
+#include "imgui.h"
+#include "imgui_impl_dx11.h"
+#include "imgui_impl_win32.h"
 namespace soku
 {
 	class BaseApp {
@@ -32,6 +34,7 @@ namespace soku
 	protected:
 		virtual void Render() = 0;
 		virtual void Update() = 0;
+		virtual void UpdateGUI(float deltaTime) = 0;
 	protected:
 		Microsoft::WRL::ComPtr<ID3D11Device> m_device;
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_context;

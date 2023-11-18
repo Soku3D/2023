@@ -1,18 +1,19 @@
-struct vsInput
+struct VSInput
 {
-    float4 pos : POSITIONT;
-    float2 texcoord : TEXCOORD;
+    float4 pos : POSITION;
+    float2 uv : TEXCOORD;
 };
-struct psInput
+struct PSInput
 {
-    float4 pos : SV_POSITION;
-    float2 texcoord : TEXCOORD;
+    float4 pos : SV_Position;
+    float2 uv : TEXCOORD;
 };
-psInput main(vsInput input)
-{
-    psInput output;
-    output.pos = input.pos;
-    output.texcoord = input.texcoord;
-    return output;
 
+PSInput main(VSInput input)
+{
+    PSInput output;
+    output.pos = input.pos;
+    output.uv = input.uv;
+    
+    return output;
 }
