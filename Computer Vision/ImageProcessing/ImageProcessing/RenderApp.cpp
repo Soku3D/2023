@@ -1,5 +1,4 @@
 #include "RenderApp.h"
-
 namespace soku {
 	RenderApp::RenderApp(int width, int height)
 		:BaseApp(width, height),
@@ -32,11 +31,38 @@ namespace soku {
 
 		// Create Image ShaderResourceView
 		Image img1;
-		img1.ReadFromFile("../Data/cyber2.jpg", m_device,m_context);
+		img1.ReadFromFile("../Data/image_1.jpg", m_device,m_context);
 		Image img2;
-		img2.ReadFromFile("../Data/shadow2.png", m_device, m_context); 
+		img2.ReadFromFile("../Data/image_1.jpg", m_device, m_context); 
 		std::vector<Image> imageData = { img1, img2};
 		images = std::make_unique< std::vector<Image>>(imageData);
+
+		__int64 prevTime;
+		__int64 currTime;
+		double delTime;
+		/*{
+			QueryPerformanceCounter((LARGE_INTEGER*)&currTime);
+			for (size_t i = 0; i < 100; i++)
+			{
+				img1.BoxBlur(m_context);
+			}
+			prevTime = currTime;
+			QueryPerformanceCounter((LARGE_INTEGER*)&currTime);
+			delTime = (currTime - prevTime) * m_timer.GetTickSeconds();
+			std::cout << "elapesed time of BoxBlur() :  " << delTime << std::endl;
+		}*/
+		{
+			QueryPerformanceCounter((LARGE_INTEGER*)&currTime);
+			for (size_t i = 0; i < 100; i++)
+			{
+				img1.BoxBlurOMP(m_context);
+			}
+			prevTime = currTime;
+			QueryPerformanceCounter((LARGE_INTEGER*)&currTime);
+			delTime = (currTime - prevTime) * m_timer.GetTickSeconds();
+			std::cout << "elapesed time of BoxBlurOMP() :  " << delTime << std::endl;
+		}
+
 
 		// Create Vertex buffer 
 		Utils::CreateVertexBuffer(vertices, m_vertexBuffer, m_device);

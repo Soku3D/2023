@@ -2,18 +2,16 @@
 #include "BaseApp.h"
 #include <vector>
 #include <algorithm>
+#include <windows.h>
 
 #include "Utils.h"
-#include "windows.h"
 #include "Image.h"
-
 namespace soku {
 	
 	class RenderApp : public BaseApp {
 	public:
 		RenderApp(int width = 1920, int height = 1080);
 		~RenderApp();
-
 		virtual bool Initialize();
 	protected:
 		virtual void Update() override;

@@ -8,6 +8,8 @@
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
+#include "Timer.h"
+
 namespace soku
 {
 	class BaseApp {
@@ -17,7 +19,7 @@ namespace soku
 
 		LRESULT BaseProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 		int Run();
-
+		Timer m_timer;
 		virtual bool Initialize();
 	private:
 		bool InitWindow();

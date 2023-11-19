@@ -105,6 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,13 +136,18 @@
     <ClCompile Include="BaseApp.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="RenderApp.cpp" />
+    <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseApp.h" />
+    <ClInclude Include="Constant.h" />
     <ClInclude Include="Image.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="RenderApp.h" />
+    <ClInclude Include="Timer.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
