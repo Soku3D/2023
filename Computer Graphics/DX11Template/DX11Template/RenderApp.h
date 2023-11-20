@@ -3,7 +3,6 @@
 #include "Utils.h"
 #include <vector>
 #include "Vertex.h"
-
 namespace soku {
 	
 	class RenderApp : public BaseApp {

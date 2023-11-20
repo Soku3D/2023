@@ -1,5 +1,4 @@
 #include "RenderApp.h"
-#include "windows.h"
 #include <algorithm>
 namespace soku {
 	RenderApp::RenderApp(int width, int height)
@@ -100,15 +99,9 @@ namespace soku {
 	}
 	void RenderApp::Update()
 	{
-		static int i = 0;
+		
 		Vec4 color = { 1.0f,0.f,0.f,1.f };
 		pixels = std::vector<Vec4>(m_canvasWidth * m_canvasHeight, canvasColor);
-
-		pixels[i++] = color;
-		if (i >= pixels.size())
-			i = 0;
-
-		
 		D3D11_MAPPED_SUBRESOURCE ms;
 		m_context->Map(m_canvasTexture.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
 
