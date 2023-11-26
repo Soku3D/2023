@@ -1,12 +1,21 @@
 #include "RenderApp.h"
-#include "UDPSocket.h"
+#include "UDPServer.h"
 
-#pragma comment(lib, "ServerLib.lib")
 int main()
 {
 	soku::RenderApp app;
+	sock::UDPServer server(30);
+	if (!server.Initialize(3001))
+	{
+		std::cout << "initserver Failed\n";
+	}
+	server.Bind();
+	printf("str : %s\n", server.outBuffer);
+	sock::SocketAddr client;
+	server.RecvFrom(client);
+	printf("str : %s\n", server.outBuffer);
 
-	std::cout<< ServerSock::UDPSocket::Abs(1, 2);
+	WSACleanup();
 	if (app.Initialize())
 	{
 		return app.Run();
