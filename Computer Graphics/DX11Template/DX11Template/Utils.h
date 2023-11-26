@@ -7,6 +7,8 @@
 #include <d3dcompiler.h>
 #include <iostream>
 #include <string>
+#include <iterator>
+#include <fstream>
 namespace soku {
 	class Utils {
 	public:
@@ -88,6 +90,12 @@ namespace soku {
 				std::cout << "Create constantBuffer Failed";
 			}
 		}
+		static std::vector<unsigned char> CreateShaderByCSO(const std::string filePath)
+		{
+			std::ifstream input(filePath, std::ios::binary);
+			std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(input), {});
+			return buffer;
+		}
 		static void CreateVertexShaderAndInputLayout(
 			const std::wstring& shaderFilePath,
 			Microsoft::WRL::ComPtr <ID3D11VertexShader>& vertexShader,
@@ -95,33 +103,47 @@ namespace soku {
 			Microsoft::WRL::ComPtr <ID3D11InputLayout>& inputlayout,
 			Microsoft::WRL::ComPtr <ID3D11Device>& device)
 		{
+#if defined(DEBUG) || (_DEBUG)
 			Microsoft::WRL::ComPtr<ID3DBlob> shader;
 			Microsoft::WRL::ComPtr<ID3DBlob> error;
 			HRESULT hr = D3DCompileFromFile(shaderFilePath.c_str(),
 				0, 0, "main", "vs_5_0", NULL, NULL,
 				&shader, &error);
 			CheckResult(hr, error.Get());
-
 			device->CreateVertexShader(shader->GetBufferPointer(), shader->GetBufferSize(),
 				NULL, &vertexShader);
-
 			device->CreateInputLayout(elements.data(), UINT(elements.size()), shader->GetBufferPointer()
 				, shader->GetBufferSize(), &inputlayout);
+#endif
+#ifndef _DEBUG
+			std::vector<unsigned char> buffer = CreateShaderByCSO("VertexShader.cso");
+			device->CreateVertexShader(buffer.data(), buffer.size(),
+				NULL, &vertexShader);
+			device->CreateInputLayout(elements.data(), UINT(elements.size()), buffer.data(), buffer.size(), \
+				&inputlayout);
+#endif	
 		}
 		static void CreatePixelShader(
 			const std::wstring& shaderFilePath,
 			Microsoft::WRL::ComPtr <ID3D11PixelShader>& pixelShader,
 			Microsoft::WRL::ComPtr <ID3D11Device>& device)
 		{
+#if defined(DEBUG) || (_DEBUG)
 			Microsoft::WRL::ComPtr<ID3DBlob> shader;
 			Microsoft::WRL::ComPtr<ID3DBlob> error;
 			HRESULT hr = D3DCompileFromFile(shaderFilePath.c_str(),
 				0, 0, "main", "ps_5_0", NULL, NULL,
 				&shader, &error);
 			CheckResult(hr, error.Get());
-
 			device->CreatePixelShader(shader->GetBufferPointer(), shader->GetBufferSize(),
 				NULL, &pixelShader);
+#endif
+#ifndef DEBUG
+			std::vector<unsigned char> buffer = CreateShaderByCSO("PixelShader.cso");
+			device->CreatePixelShader(buffer.data(), buffer.size(),
+				NULL, &pixelShader);
+#endif	
+
 		}
 		template <typename T_CONST>
 		static void UpdateConstantBuffer(std::vector<T_CONST>& constant,

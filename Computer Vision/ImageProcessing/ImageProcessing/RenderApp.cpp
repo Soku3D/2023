@@ -53,7 +53,7 @@ namespace soku {
 		}*/
 		{
 			QueryPerformanceCounter((LARGE_INTEGER*)&currTime);
-			for (size_t i = 0; i < 100; i++)
+			for (size_t i = 0; i < 2; i++)
 			{
 				img1.BoxBlurOMP(m_context);
 			}
@@ -92,7 +92,11 @@ namespace soku {
 	}
 	void RenderApp::UpdateGUI(float deltaTime)
 	{
-		//ImGui::SliderFloat4("leble", canvasColor.v, 0.0f, 1.0f);
+	/*	if (ImGui::RadioButton("pause Button", m_appPaused))
+		{
+			m_timer.Stop();
+		}*/
+
 	}
 	void RenderApp::Update()
 	{

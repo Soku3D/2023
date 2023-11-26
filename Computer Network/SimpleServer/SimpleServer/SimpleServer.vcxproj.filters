@@ -13,36 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="include">
-      <UniqueIdentifier>{4b5e284a-440b-4d95-9641-290d11da0ca9}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ServerUtils.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SocketAddr.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="src\UDPServer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="src\UDPSocket.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\ServerUtils.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\SocketAddr.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\UDPServer.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\UDPSocket.h">
-      <Filter>include</Filter>
+    <ClInclude Include="TcpSelect.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

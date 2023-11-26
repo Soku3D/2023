@@ -7,6 +7,7 @@ namespace soku {
 
 		float GetTime()const;
 		float DeltaTime()const;
+		float TotalTime()const;
 		double GetTickSeconds()const;
 		void Reset();
 		void Start();

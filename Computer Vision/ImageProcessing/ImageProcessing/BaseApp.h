@@ -20,6 +20,7 @@ namespace soku
 		LRESULT BaseProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 		int Run();
 		Timer m_timer;
+		bool m_appPaused;
 		virtual bool Initialize();
 	private:
 		bool InitWindow();
