@@ -1,11 +1,10 @@
 #include "RenderApp.h"
-#include <algorithm>
 namespace soku {
 	RenderApp::RenderApp(int width, int height)
 		:BaseApp(width, height),
 		m_indexCount(0),
-		m_canvasWidth(width /80),
-		m_canvasHeight(height / 80)
+		m_canvasWidth(1920),
+		m_canvasHeight(1280)
 	{
 	}
 	bool RenderApp::Initialize()
@@ -30,6 +29,41 @@ namespace soku {
 		};
 		m_indexCount = UINT(indices.size());
 
+		// Create Image ShaderResourceView
+		Image img1;
+		img1.ReadFromFile("../Data/image_1.jpg", m_device,m_context);
+		Image img2;
+		img2.ReadFromFile("../Data/image_1.jpg", m_device, m_context); 
+		std::vector<Image> imageData = { img1, img2};
+		images = std::make_unique< std::vector<Image>>(imageData);
+
+		__int64 prevTime;
+		__int64 currTime;
+		double delTime;
+		/*{
+			QueryPerformanceCounter((LARGE_INTEGER*)&currTime);
+			for (size_t i = 0; i < 100; i++)
+			{
+				img1.BoxBlur(m_context);
+			}
+			prevTime = currTime;
+			QueryPerformanceCounter((LARGE_INTEGER*)&currTime);
+			delTime = (currTime - prevTime) * m_timer.GetTickSeconds();
+			std::cout << "elapesed time of BoxBlur() :  " << delTime << std::endl;
+		}*/
+		{
+			QueryPerformanceCounter((LARGE_INTEGER*)&currTime);
+			for (size_t i = 0; i < 2; i++)
+			{
+				img1.BoxBlurOMP(m_context);
+			}
+			prevTime = currTime;
+			QueryPerformanceCounter((LARGE_INTEGER*)&currTime);
+			delTime = (currTime - prevTime) * m_timer.GetTickSeconds();
+			std::cout << "elapesed time of BoxBlurOMP() :  " << delTime << std::endl;
+		}
+
+
 		// Create Vertex buffer 
 		Utils::CreateVertexBuffer(vertices, m_vertexBuffer, m_device);
 
@@ -50,43 +84,6 @@ namespace soku {
 			m_device
 		);
 
-		// Create SamplerState
-		D3D11_SAMPLER_DESC samplerDesc;
-		ZeroMemory(&samplerDesc, sizeof(samplerDesc));
-		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-		samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-		samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-		samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-		samplerDesc.MinLOD = 0;
-		samplerDesc.Filter = D3D11_FILTER_MAXIMUM_MIN_MAG_MIP_POINT;
-		samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-
-		if (FAILED(m_device->CreateSamplerState(&samplerDesc, m_samplerState.GetAddressOf())))
-		{
-			std::cout << "CreateSamplerState Failed" << std::endl;
-		}
-
-		// Create Canvas Texture
-		D3D11_TEXTURE2D_DESC canvasTexture;
-		ZeroMemory(&canvasTexture, sizeof(canvasTexture));
-		canvasTexture.Width = m_canvasWidth;
-		canvasTexture.Height = m_canvasHeight;
-		canvasTexture.ArraySize = canvasTexture.MipLevels = 1;
-		canvasTexture.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-		canvasTexture.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		canvasTexture.Usage = D3D11_USAGE_DYNAMIC;
-		canvasTexture.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		canvasTexture.SampleDesc.Count = 1;
-		
-		
-		if (FAILED(m_device->CreateTexture2D(&canvasTexture, nullptr, m_canvasTexture.GetAddressOf())))
-		{
-			std::cout << "CreateTexture2D(canvas) Failed" << std::endl;
-		}
-
-		// Create ShaderResourceView
-		m_device->CreateShaderResourceView(m_canvasTexture.Get(), nullptr, m_canvasShaderResourceView.GetAddressOf());
-		
 		return true;
 	}
 	RenderApp::~RenderApp()
@@ -95,22 +92,17 @@ namespace soku {
 	}
 	void RenderApp::UpdateGUI(float deltaTime)
 	{
-		ImGui::SliderFloat4("leble", canvasColor.v, 0.0f, 1.0f);
+	/*	if (ImGui::RadioButton("pause Button", m_appPaused))
+		{
+			m_timer.Stop();
+		}*/
+
 	}
 	void RenderApp::Update()
 	{
-		
-		Vec4 color = { 1.0f,0.f,0.f,1.f };
-		pixels = std::vector<Vec4>(m_canvasWidth * m_canvasHeight, color);
-		D3D11_MAPPED_SUBRESOURCE ms;
-		m_context->Map(m_canvasTexture.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
-
-		memcpy(ms.pData, pixels.data(), pixels.size()* sizeof(Vec4));
-		m_context->Unmap(m_canvasTexture.Get(), 0);
 	}
 	void RenderApp::Render()
 	{
-
 		float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		m_context->ClearRenderTargetView(m_renderTargetView.Get(), clearColor);
 		m_context->ClearDepthStencilView(m_depthStencilView.Get(),
@@ -124,11 +116,20 @@ namespace soku {
 		m_context->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 		m_context->IASetInputLayout(m_inputLayout.Get());
 		m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		
+		Image* p = images->data();
+		std::vector<ID3D11ShaderResourceView*> arr;
+		for (size_t i = 0; i < images->size(); i++)
+		{
+			arr.emplace_back(p[i].m_ShaderResourceView.Get());
+		}
+		m_context->PSSetSamplers(0, 1, images->data()[0].m_samplerState.GetAddressOf());
+
+		m_context->PSSetShaderResources(0, images->size(), arr.data());
 
 		m_context->VSSetShader(m_vertexShader.Get(), nullptr, 0);
 		m_context->PSSetShader(m_pixelShader.Get(), nullptr, 0);
-		m_context->PSSetShaderResources(0, 1, m_canvasShaderResourceView.GetAddressOf());
-		m_context->PSSetSamplers(0, 1, m_samplerState.GetAddressOf());
+		
 		m_context->RSSetState(m_rasterizerState.Get());
 
 		m_context->DrawIndexed(m_indexCount, 0, 0);

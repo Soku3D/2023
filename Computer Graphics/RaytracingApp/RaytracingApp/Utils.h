@@ -1,14 +1,3 @@
-#pragma once 
-
-#include <vector>
-#include <d3d11.h>
-#include <wrl.h>
-#include <dxgi.h>
-#include <d3dcompiler.h>
-#include <iostream>
-#include <string>
-#include <iterator>
-#include <fstream>
 namespace soku {
 	class Utils {
 	public:
@@ -90,12 +79,6 @@ namespace soku {
 				std::cout << "Create constantBuffer Failed";
 			}
 		}
-		static std::vector<unsigned char> CreateShaderByCSO(const std::string filePath)
-		{
-			std::ifstream input(filePath, std::ios::binary);
-			std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(input), {});
-			return buffer;
-		}
 		static void CreateVertexShaderAndInputLayout(
 			const std::wstring& shaderFilePath,
 			Microsoft::WRL::ComPtr <ID3D11VertexShader>& vertexShader,
@@ -103,47 +86,33 @@ namespace soku {
 			Microsoft::WRL::ComPtr <ID3D11InputLayout>& inputlayout,
 			Microsoft::WRL::ComPtr <ID3D11Device>& device)
 		{
-#if defined(DEBUG) || (_DEBUG)
 			Microsoft::WRL::ComPtr<ID3DBlob> shader;
 			Microsoft::WRL::ComPtr<ID3DBlob> error;
 			HRESULT hr = D3DCompileFromFile(shaderFilePath.c_str(),
 				0, 0, "main", "vs_5_0", NULL, NULL,
 				&shader, &error);
 			CheckResult(hr, error.Get());
+
 			device->CreateVertexShader(shader->GetBufferPointer(), shader->GetBufferSize(),
 				NULL, &vertexShader);
+
 			device->CreateInputLayout(elements.data(), UINT(elements.size()), shader->GetBufferPointer()
 				, shader->GetBufferSize(), &inputlayout);
-#endif
-#ifndef _DEBUG
-			std::vector<unsigned char> buffer = CreateShaderByCSO("VertexShader.cso");
-			device->CreateVertexShader(buffer.data(), buffer.size(),
-				NULL, &vertexShader);
-			device->CreateInputLayout(elements.data(), UINT(elements.size()), buffer.data(), buffer.size(), \
-				&inputlayout);
-#endif	
 		}
 		static void CreatePixelShader(
 			const std::wstring& shaderFilePath,
 			Microsoft::WRL::ComPtr <ID3D11PixelShader>& pixelShader,
 			Microsoft::WRL::ComPtr <ID3D11Device>& device)
 		{
-#if defined(DEBUG) || (_DEBUG)
 			Microsoft::WRL::ComPtr<ID3DBlob> shader;
 			Microsoft::WRL::ComPtr<ID3DBlob> error;
 			HRESULT hr = D3DCompileFromFile(shaderFilePath.c_str(),
 				0, 0, "main", "ps_5_0", NULL, NULL,
 				&shader, &error);
 			CheckResult(hr, error.Get());
+
 			device->CreatePixelShader(shader->GetBufferPointer(), shader->GetBufferSize(),
 				NULL, &pixelShader);
-#endif
-#ifndef _DEBUG
-			std::vector<unsigned char> buffer = CreateShaderByCSO("PixelShader.cso");
-			device->CreatePixelShader(buffer.data(), buffer.size(),
-				NULL, &pixelShader);
-#endif	
-
 		}
 		template <typename T_CONST>
 		static void UpdateConstantBuffer(std::vector<T_CONST>& constant,
@@ -154,6 +123,55 @@ namespace soku {
 			context->Map(buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &sub);
 			memcpy(sub.pData, constant.data(), sizeof(T_CONST) * constant.size());
 			context->Unmap(buffer.Get(), 0);
+		}
+		static void CreateSamplerState(
+			Microsoft::WRL::ComPtr<ID3D11SamplerState>& samplerState,
+			Microsoft::WRL::ComPtr <ID3D11Device>& device,
+			D3D11_TEXTURE_ADDRESS_MODE mode = D3D11_TEXTURE_ADDRESS_CLAMP,
+			D3D11_FILTER filter = D3D11_FILTER_MAXIMUM_MIN_MAG_MIP_POINT)
+		{
+			D3D11_SAMPLER_DESC samplerDesc;
+			ZeroMemory(&samplerDesc, sizeof(samplerDesc));
+			samplerDesc.AddressU = mode;
+			samplerDesc.AddressV = mode;
+			samplerDesc.AddressW = mode;
+			samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+			samplerDesc.MinLOD = 0;
+			samplerDesc.Filter = D3D11_FILTER_MAXIMUM_MIN_MAG_MIP_POINT;
+			samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+
+			if (FAILED(device->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf())))
+			{
+				std::cout << "CreateSamplerState Failed" << std::endl;
+			}
+		}
+		static void CreateShaderResourceView(
+			UINT width,
+			UINT height,
+			Microsoft::WRL::ComPtr <ID3D11Texture2D>& texture,
+			Microsoft::WRL::ComPtr <ID3D11ShaderResourceView>& shaderResourceView,
+			Microsoft::WRL::ComPtr <ID3D11Device>& device
+			)
+		{
+			D3D11_TEXTURE2D_DESC textureDesc;
+			ZeroMemory(&textureDesc, sizeof(textureDesc));
+			textureDesc.Width = width;
+			textureDesc.Height = height,
+			textureDesc.ArraySize = textureDesc.MipLevels = 1;
+			textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+			textureDesc.Usage = D3D11_USAGE_DYNAMIC;
+			textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			textureDesc.SampleDesc.Count = 1;
+
+
+			if (FAILED(device->CreateTexture2D(&textureDesc, nullptr, texture.GetAddressOf())))
+			{
+				std::cout << "CreateShaderResourceView() Failed" << std::endl;
+			}
+
+			// Create ShaderResourceView
+			device->CreateShaderResourceView(texture.Get(), nullptr, shaderResourceView.GetAddressOf());
 		}
 		
 	};

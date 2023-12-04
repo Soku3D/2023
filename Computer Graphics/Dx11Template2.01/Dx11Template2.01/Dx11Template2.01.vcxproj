@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{e0c8c7a4-7a57-4ccd-9a21-95b69b8762a1}</ProjectGuid>
-    <RootNamespace>ImageProcessing</RootNamespace>
+    <ProjectGuid>{8f570d3d-bcba-4f77-9f7d-b3ab40bfb52b}</ProjectGuid>
+    <RootNamespace>Dx11Template2_01</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -142,12 +142,10 @@
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AppShared.h" />
     <ClInclude Include="BaseApp.h" />
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="Model.h" />
-    <ClInclude Include="pch.h" />
     <ClInclude Include="RenderApp.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Utils.h" />
