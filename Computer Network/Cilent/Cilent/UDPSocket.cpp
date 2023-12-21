@@ -17,9 +17,9 @@ namespace server {
 	}
 	int UDPSocket::SendTo(const void* inData, int inLen, const SocketAddress& inTo)
 	{
-		sendto(m_socket, reinterpret_cast<const char*>(inData),
+		return sendto(m_socket, reinterpret_cast<const char*>(inData),
 			inLen, 0, &inTo.m_sockAddr, inTo.GetSize());
-		return 1;
+		
 	}
 	int UDPSocket::ReceiveFrom(void* inBuffer, int inLen, SocketAddress& outFrom)
 	{

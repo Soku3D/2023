@@ -21,6 +21,9 @@ namespace soku
 	{
 		//assert(appPtr == nullptr);
 		appPtr = this;
+		uint64_t freq;
+		QueryPerformanceFrequency((LARGE_INTEGER*) &freq);
+		secondPerTick = 1.0f / freq;
 	}
 	BaseApp::~BaseApp()
 	{

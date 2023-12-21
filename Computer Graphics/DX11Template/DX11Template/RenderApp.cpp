@@ -4,9 +4,19 @@ namespace soku {
 	RenderApp::RenderApp(int width, int height)
 		:BaseApp(width, height),
 		m_indexCount(0),
-		m_canvasWidth(width /80),
-		m_canvasHeight(height / 80)
+		m_canvasWidth(width),
+		m_canvasHeight(height)
 	{
+		float s = 0.8f;
+		Vector3 p0(-s, -s, 2.0f);
+		Vector3 p1(-s, s, 2.0f);
+		Vector3 p2(s,s, 2.0f);
+		Vector3 p3(s, -s, 2.0f);
+
+		//std::shared_ptr<Triangle> triangle = std::make_shared<Triangle>(p1, p2, p3);
+		std::shared_ptr<Rectangle> rect = std::make_shared<Rectangle>(p0, p1, p2, p3);
+
+		models.push_back(rect);
 	}
 	bool RenderApp::Initialize()
 	{
@@ -41,6 +51,7 @@ namespace soku {
 			{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 			{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0}
 		};
+
 		Utils::CreateVertexShaderAndInputLayout(L"VertexShader.hlsl", m_vertexShader, elements, m_inputLayout, m_device);
 
 		// Create Pixel Shader
@@ -86,8 +97,23 @@ namespace soku {
 
 		// Create ShaderResourceView
 		m_device->CreateShaderResourceView(m_canvasTexture.Get(), nullptr, m_canvasShaderResourceView.GetAddressOf());
-		
+		UpdateColor();
 		return true;
+	}
+	Vector3 RenderApp::TranslateWorldToScreen(const Vector2& worldPos)
+	{
+		float xScale = 2.0f / (m_canvasWidth - 1);
+		float yScale = 2.0f / (m_canvasHeight - 1);
+		float aspect = (float)m_canvasWidth / m_canvasHeight;
+
+		return Vector3(aspect * (worldPos.x * xScale - 1.0f),-1.0f*(worldPos.y * yScale-1.0f), 0.0f);
+	}
+	Vector3 RenderApp::TranselateScreenToBox(const Vector2& worldPos)
+	{
+		float xScale = 2.0f / (m_canvasWidth - 1);
+		float yScale = 2.0f / (m_canvasHeight - 1);
+
+		return Vector3((worldPos.x * xScale - 1.0f), -1.0f * (worldPos.y * yScale - 1.0f), 0.0f);
 	}
 	RenderApp::~RenderApp()
 	{
@@ -95,22 +121,72 @@ namespace soku {
 	}
 	void RenderApp::UpdateGUI(float deltaTime)
 	{
-		ImGui::SliderFloat4("leble", canvasColor.v, 0.0f, 1.0f);
+		//ImGui::SliderFloat4("leble", canvasColor.v, 0.0f, 1.0f);
+	}
+	void RenderApp::SetTime(uint64_t& currTime) {
+		QueryPerformanceCounter((LARGE_INTEGER*)&currTime);
+	}
+	void RenderApp::UpdateColor()
+	{
+		Vec4 color = { 1.0f,0.f,0.f,1.f };
+		pixels = std::vector<Vector4>(m_canvasWidth * m_canvasHeight, Vector4{ 0.0f,0.0f,0.0f,1.0f });
+		uint64_t prevTime, currTime;
+		SetTime(prevTime);
+
+		for (int y = 0; y < m_canvasHeight; y++)
+		{
+			for (int x = 0; x < m_canvasWidth; x++)
+			{
+				SetPixelColor(x, y);
+			}
+		}
+		SetTime(currTime);
+		uint64_t delTime = currTime - prevTime;
+		std::cout << delTime * secondPerTick;
+		Utils::UpdateConstantBuffer(pixels, m_canvasTexture, m_context);
+	}
+	void RenderApp::SetPixelColor(const int& x,const int& y)
+	{
+		int currIdx = x + y * m_canvasWidth;
+		Vector2 currPos(x, y);
+		Vector3 screenPos = TranslateWorldToScreen(currPos);
+		Vector3 rayDir = (screenPos - m_camera.m_pos);
+		rayDir.Normalize();
+		Ray ray(Vector3(screenPos.x, screenPos.y, 0.0f), rayDir);
+		pixels[currIdx] = TraceRay(ray);
+	}
+	Vector4 RenderApp::TraceRay(const Ray& in_ray)
+	{
+		Hit hit;
+		Vector4 color(0.0f, 0.0f, 0.f, 1.f);
+		hit = LoopCollision(in_ray);
+		if (hit.distance > 0.0f && hit.hitModel)
+		{
+			return hit.hitModel->GetColor();
+		}
+		return color;
+	}
+	Hit RenderApp::LoopCollision(const Ray& in_ray)
+	{
+		Hit hit;
+		for (size_t modelIndex = 0; modelIndex < models.size(); modelIndex++)
+		{
+			Hit currHit = models[modelIndex]->CheckCollision(in_ray);
+			if (currHit.distance > 0.0f)
+			{
+				if (hit.distance < 0.0f)
+					hit = currHit;
+				else if (hit.distance > currHit.distance)
+					hit = currHit;
+			}
+		}
+		return hit;
 	}
 	void RenderApp::Update()
 	{
-		
-		Vec4 color = { 1.0f,0.f,0.f,1.f };
-		pixels = std::vector<Vec4>(m_canvasWidth * m_canvasHeight, canvasColor);
-		D3D11_MAPPED_SUBRESOURCE ms;
-		m_context->Map(m_canvasTexture.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
-
-		memcpy(ms.pData, pixels.data(), pixels.size()* sizeof(Vec4));
-		m_context->Unmap(m_canvasTexture.Get(), 0);
 	}
 	void RenderApp::Render()
 	{
-
 		float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		m_context->ClearRenderTargetView(m_renderTargetView.Get(), clearColor);
 		m_context->ClearDepthStencilView(m_depthStencilView.Get(),

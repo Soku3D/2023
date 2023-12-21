@@ -47,5 +47,7 @@ namespace soku
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_depthStencilView;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_ds;
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerState;
+
+		float secondPerTick;
 	};
 }
